@@ -1,3 +1,5 @@
+import tensorflow
+import keras
 from keras.layers import Conv2D
 from keras.layers import Conv2DTranspose
 from keras.layers import LeakyReLU
@@ -6,7 +8,6 @@ from keras.layers import Concatenate
 from keras.layers import Dropout
 from keras.layers import BatchNormalization
 from keras.initializers import RandomNormal
-from tensorflow.keras.layers import Input
 
 class Generator(keras.models.Model):
     def __init__(self, image_shape=(256,256,3)):
@@ -16,7 +17,7 @@ class Generator(keras.models.Model):
         init = RandomNormal(stddev=0.02)
 
         # Define image input
-        self.in_image = Input(shape=image_shape)
+        self.in_image = tensorflow.keras.layers.Input(shape=image_shape)
 
         # Encoder model
         e1 = self.define_encoder_block(self.in_image, 64, batchnorm=False)
@@ -45,7 +46,7 @@ class Generator(keras.models.Model):
         self.out_image = Activation('tanh')(g)
 
         # Define model
-        self.model = Model(self.in_image, self.out_image)
+        self.model = keras.models.Model(self.in_image, self.out_image)
 
     def call(self, inputs):
         return self.model(inputs)

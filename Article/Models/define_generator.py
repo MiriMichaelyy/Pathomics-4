@@ -1,4 +1,3 @@
-
 from keras.initializers import RandomNormal
 from keras.models import Model
 #from keras.models import Input
