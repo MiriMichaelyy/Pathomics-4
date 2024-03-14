@@ -1,8 +1,7 @@
 import os
 import sys
 
-import test
-import train
+import logic
 import inputs
 import outputs
 import preprocess
@@ -29,31 +28,35 @@ train_percent = 0.6
 # Compile the parameters into compact variables.
 img_shape     = (img_rows, img_cols, channels)
 dataset_split = (train_percent, test_percent, val_percent)
-results_path  = os.path.dirname(dataset_path) + "_Processed/" + os.path.basename(dataset_path)
+
+results_path = os.path.dirname(dataset_path) + "_Processed/" + os.path.basename(dataset_path)
+if not os.path.exists(results_path):
+    os.makedirs(results_path)
+if not os.path.exists(f"{results_path}/color"):
+    os.makedirs(f"{results_path}/color")
+if not os.path.exists(f"{results_path}/grayscale"):
+    os.makedirs(f"{results_path}/grayscale")
+if not os.path.exists(f"{results_path}/combined"):
+    os.makedirs(f"{results_path}/combined")
+if not os.path.exists(f"{results_path}/train"):
+    os.makedirs(f"{results_path}/train")
+if not os.path.exists(f"{results_path}/test"):
+    os.makedirs(f"{results_path}/test")
+if not os.path.exists(f"{results_path}/val"):
+    os.makedirs(f"{results_path}/val")
 
 ##############################
-# PRE-PROCESS                #
-# Process the database.      #
+# MAIN LOGIC                 #
 ##############################
-datasets = preprocess(dataset_path, results_path, dataset_split, img_shape)
-train_dataset, test_dataset, val_dataset = datasets
+# Prepare the inputs.
+dataset = inputs.load_dataset(dataset_path)
 
-##############################
-# INPUTS                     #
-# Prepare the inputs.        #
-##############################
-models  = define_models(img_shape)
-dataset = inputs.load_batch(f"{path}/train", train_samples)
+models = logic.define_models(img_shape)
+train, test, val = logic.preprocess(dataset, dataset_split, img_shape)
 
-##############################
-# TRAIN & TEST               #
-# Train the GAN model.       #
-##############################
-train(results_path, models, dataset, epochs, train_samples)
-test(get_best_model(results_path), test_samples, img_shape)
+# Train & test the GAN model.
+logic.train(results_path, models, train, epochs, train_samples)
+logic.test(inputs.get_best_model(results_path), test_samples, img_shape)
 
-##############################
-# OUTPUTS                    #
-# Outputs of the models.     #
-##############################
+# Outputs of the models.
 outputs.plot_outputs()

@@ -2,28 +2,34 @@ import os
 import keras
 import numpy
 import imageio
+from PIL import Image
 
-def load_batch(path, batch_size=1):
+def load_dataset(path):
     if not os.path.exists(path):
-        return [], []
+        return []
 
-    # Get all the color images inside path.
-    batch_images = list(filter(os.path.isfile, os.listdir(path)))
-    batch_images = [file.split("_")[1] for file in batch_images if file.startswith("color_")]
+    # dataset = list(map(lambda file: os.path.join(path, file), os.listdir(path)))
+    dataset = [os.path.join(path, file) for file in os.listdir(path)]
+    dataset = list(filter(os.path.isfile, dataset))
+    dataset = list(filter(lambda image: image.endswith(".tiff"), dataset))
+    dataset = list(map(Image.open, dataset))
 
-    if len(batch_images) > batch_size:
-        batch_images = numpy.random.choice(batch_images, size=batch_size)
+    return dataset
+
+def load_batch(dataset, batch_size=1):
+    random.shuffle(dataset)
+    batch   = dataset[:batch_size]
+    dataset = dataset[batch_size:]
 
     originals = []
     grayscale = []
-    for img_path in batch_images:
-        color_img = imageio.imread(os.path.join(path, "color_"     + img_path)).astype(numpy.float)
-        gray_img  = imageio.imread(os.path.join(path, "grayscale_" + img_path)).astype(numpy.float)
-        originals.append(color_img)
-        grayscale.append(gray_img)
+    for colored, grayscale, combined in batch:
+        originals.append(numpy.array(colored).astype(numpy.float))
+        grayscale.append(numpy.array(grayscale).astype(numpy.float))
 
     originals = numpy.array(originals) / 127.5 - 1.
     grayscale = numpy.array(grayscale) / 127.5 - 1.
+
     return originals, grayscale
 
 def get_best_model(path):
