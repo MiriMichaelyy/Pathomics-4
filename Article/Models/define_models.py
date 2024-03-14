@@ -125,10 +125,3 @@ def define_discriminator(image_shape):
     opt = Adam(lr=0.0002, beta_1=0.5)
     model.compile(loss='binary_crossentropy', optimizer=opt, loss_weights=[0.5])
     return model
-
-def define_models(shape)
-    d_model   = define_discriminator(shape)
-    g_model   = define_generator(shape)
-    gan_model = define_gan(g_model, d_model, shape)
-
-    return tuple(d_model, g_model, gan_model)

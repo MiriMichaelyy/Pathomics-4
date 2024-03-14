@@ -1,31 +1,28 @@
+import os
 import numpy
 import inputs
 import matplotlib
 import matplotlib.pyplot as plt
 
-def summarize_performance(path, epoch, batch, g_model, n_samples=3):
-    # select a sample of input images
-    [X_realB, X_realA] = inputs.load_batch(f"{path}/train", n_samples)
-    # generate a batch of fake samples
-    X_fakeB = g_model.predict(X_realA)
+def save_dataset(path, dataset):
+    if not os.path.exists(path):
+        os.makedirs(path)
 
-    # scale all pixels from [-1,1] to [0,1]
-    X_realA = (X_realA + 1) / 2.0
-    X_realB = (X_realB + 1) / 2.0
-    X_fakeB = (X_fakeB + 1) / 2.0
+    offset = len(os.listdir(path))
+    for index, image in enumerate(dataset):
+        image.save(f"{path}/{offset + index + 1}.tiff")
 
-    # plot real source images
-    if not os.path.exists(f"{path}/results")
-        os.makedirs(f"{path}/results")
+def save_losses(losses, path, epoch):
+    numpy.save(f'{path}/results/E{epoch}_Disc_loss_real.npy', numpy.array(losses[0]))
+    numpy.save(f'{path}/results/E{epoch}_Disc_loss_fake.npy', numpy.array(losses[1]))
+    numpy.save(f'{path}/results/E{epoch}_Gen_loss.npy',       numpy.array(losses[2]))
 
-    for i in range(n_samples):
-        plt.imsave(f"{path}/results/Generated_E{epoch+1}_B{batch+1}_{i}.tiff", X_fakeB[i])
-        # plt.imsave(os.path.join(path, "results", 'Generated_E%d_B%d_%d.tiff' % (epoch + 1, batch + 1, i + 1), X_fakeB[i]))
+def save_models(models, path, epoch):
+    g_model, d_model, gan_model = models
 
-    # save the generator model
-    if not os.path.exists(f"{path}/models"):
-        os.makedirs(f"{path}/models")
-    g_model.save(f"{path}/models/model_{epoch+1}_{batch+1}.h5")
+    g_model.save  (f"{path}/models/g_model_{epoch}.h5")
+    d_model.save  (f"{path}/models/d_model_{epoch}.h5")
+    gan_model.save(f"{path}/models/gan_model_{epoch}.h5")
 
 def smooth_curve_gen(points, factor=0.6):
     smoothed_points = []
@@ -48,10 +45,13 @@ def smooth_curve_dis(points, factor=0.3):
             smoothed_points.append(point)
     return smoothed_points
 
-def plot_outputs(style='seaborn'):
-    Gen_loss       = numpy.load('Gen_loss.npy')
-    Disc_loss_real = numpy.load('Disc_loss_real.npy')
-    Disc_loss_fake = numpy.load('Disc_loss_fake.npy')
+def plot_outputs(style='seaborn', Disc_loss_real=None, Disc_loss_fake=None, Gen_loss=None):
+    if Disc_loss_real is None:
+        Disc_loss_real = numpy.load('Disc_loss_real.npy')
+    if Disc_loss_fake is None:
+        Disc_loss_fake = numpy.load('Disc_loss_fake.npy')
+    if Gen_loss is None:
+        Gen_loss = numpy.load('Gen_loss.npy')
 
     epoch = range(0, len(Gen_loss))
     matplotlib.style.use(sty)

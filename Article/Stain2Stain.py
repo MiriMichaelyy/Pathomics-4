@@ -2,11 +2,11 @@ import os
 import sys
 
 import logic
+import Models
 import inputs
 import outputs
-import preprocess
 
-if sys.argc <= 1:
+if len(sys.argv) <= 1:
     print("Please provide path to a dataset.")
     exit()
 
@@ -24,6 +24,7 @@ img_cols      = 256
 val_percent   = 0.2
 test_percent  = 0.2
 train_percent = 0.6
+epochs        = 15
 
 # Compile the parameters into compact variables.
 img_shape     = (img_rows, img_cols, channels)
@@ -44,19 +45,47 @@ if not os.path.exists(f"{results_path}/test"):
     os.makedirs(f"{results_path}/test")
 if not os.path.exists(f"{results_path}/val"):
     os.makedirs(f"{results_path}/val")
+if not os.path.exists(f"{results_path}/results"):
+    os.makedirs(f"{results_path}/results")
+if not os.path.exists(f"{results_path}/models"):
+    os.makedirs(f"{results_path}/models")
 
 ##############################
 # MAIN LOGIC                 #
 ##############################
-# Prepare the inputs.
-dataset = inputs.load_dataset(dataset_path)
+num_of_samples = 0
+for image in inputs.load_dataset(dataset_path):
+    color, grayscale, combined = logic.process_image(image, img_shape)
+    num_of_samples += len(color)
 
-models = logic.define_models(img_shape)
-train, test, val = logic.preprocess(dataset, dataset_split, img_shape)
+    outputs.save_dataset(f"{results_path}/color",     color)
+    outputs.save_dataset(f"{results_path}/combined",  combined)
+    outputs.save_dataset(f"{results_path}/grayscale", grayscale)
+
+color     = inputs.load_dataset(f"{dataset_path}/color")
+combined  = inputs.load_dataset(f"{dataset_path}/combined")
+grayscale = inputs.load_dataset(f"{dataset_path}/grayscale")
+
+datasets         = (color, grayscale, combined)
+train, test, val = logic.split_dataset(datasets, num_of_samples, dataset_split)
+
+outputs.save_dataset(f"{results_path}/train", train)
+outputs.save_dataset(f"{results_path}/test",  test)
+outputs.save_dataset(f"{results_path}/val",   val)
 
 # Train & test the GAN model.
-logic.train(results_path, models, train, epochs, train_samples)
-logic.test(inputs.get_best_model(results_path), test_samples, img_shape)
+print("Training Models")
+models = Models.define_models(img_shape)
+for epoch in range(epochs):
+    print(f"Epoch #{epoch+1}")
+    train          = inputs.load_dataset(f"{dataset_path}/train")
+    models, losses = logic.train(models, train)
+    outputs.save_losses(losses, results_path, epoch + 1)
+    outputs.save_models(models, results_path, epoch + 1)
+
+print("Testing...")
+test = inputs.load_dataset(f"{dataset_path}/test")
+logic.test(inputs.get_best_model(results_path), test)
 
 # Outputs of the models.
-outputs.plot_outputs()
+outputs.plot_outputs('seaborn')

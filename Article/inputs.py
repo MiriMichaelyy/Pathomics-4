@@ -12,9 +12,10 @@ def load_dataset(path):
     dataset = [os.path.join(path, file) for file in os.listdir(path)]
     dataset = list(filter(os.path.isfile, dataset))
     dataset = list(filter(lambda image: image.endswith(".tiff"), dataset))
-    dataset = list(map(Image.open, dataset))
 
-    return dataset
+    for full_path in dataset:
+        with Image.open(full_path) as image:
+            yield image
 
 def load_batch(dataset, batch_size=1):
     random.shuffle(dataset)
@@ -33,4 +34,4 @@ def load_batch(dataset, batch_size=1):
     return originals, grayscale
 
 def get_best_model(path):
-    return keras.models.load_model(f"{path}/models/model_15_2500.h5")
+    return keras.models.load_model(f"{path}/models/model_15.h5")

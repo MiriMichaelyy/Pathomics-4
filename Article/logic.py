@@ -36,86 +36,85 @@ def process_image(image, size):
 
     return colored_images, grayscale_images, combined_images
 
-def split_dataset(color, grayscale, combined, split):
-    num_of_samples = len(color)
-    train_samples  = num_of_samples * split[0]
-    test_samples   = num_of_samples * split[1]
-    val_samples    = num_of_samples * split[2]
+def split_dataset(dataset, dataset_len, split):
+    def gen_dataset(color, grayscale, combined, maximum):
+        while maximum > 0:
+            yield next(color), next(grayscale), next(combined)
+            maximum -= 1
 
-    indices = range(num_of_samples)
-    random.shuffle(indices)
+    color, grayscale, combined = dataset
+    train_set = gen_dataset(color, grayscale, combined, dataset_len * split[0])
+    test_set  = gen_dataset(color, grayscale, combined, dataset_len * split[1])
+    val_set   = gen_dataset(color, grayscale, combined, dataset_len * split[2])
 
-    train_indices = indices[:train_samples]
-    test_indices  = indices[train_samples:train_samples + test_samples]
-    val_indices   = indices[train_samples + test_samples:]
-
-    # Create train, test, and val lists
-    train = [(color[i], grayscale[i], combined[i]) for i in train_indices]
-    test  = [(color[i], grayscale[i], combined[i]) for i in test_indices]
-    val   = [(color[i], grayscale[i], combined[i]) for i in val_indices]
-
-    return train, test, val
+    return train_set, test_set, val_set
 
 def preprocess(dataset, split, size):
     color_images     = []
     grayscale_images = []
     combined_images  = []
+
     for index, image in enumerate(dataset):
-        color, grayscale, combined = process_image(iamge, size)
+        color, grayscale, combined = process_image(image, size)
         color_images     += color
         combined_images  += combined
         grayscale_images += grayscale
-    return split_dataset(color_images, grayscale_images, split)
 
-def train(path, models, dataset, n_epochs=15, n_batch=1):
+    new_dataset = (color_images, grayscale_images, combined_images)
+    return split_dataset(new_dataset, split)
+
+def train(models, dataset):
+    d_model, g_model, gan_model = models
     Disc_loss_real = []
     Disc_loss_fake = []
     Gen_loss       = []
-    d_model, g_model, gan_model = models
 
     # determine the output square shape of the discriminator
     n_patch = d_model.output_shape[1]
 
     # calculate the number of training iterations
-    # manually enumerate epochs
-    y_real = numpy.ones((n_batch, n_patch, n_patch, 1))
+    y_real = numpy.ones((1, n_patch, n_patch, 1))
+
+    # select a batch of real samples
     start_time = datetime.datetime.now()
-    for i in range(n_epochs):
+    for i, (X_realB, X_realA, combined) in enumerate(dataset):
 
-        # select a batch of real samples
-        for batch_i, (X_realB, X_realA) in enumerate(dataset):
+        # Generate a batch of fake samples.
+        X_fakeB = g_model.predict(X_realA)
+        y_fake  = numpy.zeros((len(X_fakeB), n_patch, n_patch, 1))
 
-            # Generate a batch of fake samples.
-            X_fakeB = g_model.predict(X_realA)
-            y_fake  = numpy.zeros((len(X_fakeB), n_patch, n_patch, 1))
+        # Update models for real samples.
+        d_loss1 = d_model.train_on_batch([X_realA, X_realB], y_real)
+        d_loss2 = d_model.train_on_batch([X_realA, X_fakeB], y_fake)
 
-            # Update models for real samples.
-            d_loss1 = d_model.train_on_batch([X_realA, X_realB], y_real)
-            d_loss2 = d_model.train_on_batch([X_realA, X_fakeB], y_fake)
+        # update the generator
+        g_loss, _, _ = gan_model.train_on_batch(X_realA, [y_real, X_realB])
+        elapsed_time = datetime.datetime.now() - start_time
 
-            # update the generator
-            g_loss, _, _ = gan_model.train_on_batch(X_realA, [y_real, X_realB])
-            elapsed_time = datetime.datetime.now() - start_time
+        # summarize performance
+        # print('>step: %d >epoch %d-%d >batch %d-%d, D_loss_real[%.3f]  D_loss_fake[%.3f]  G_loss[%.3f]  time: %s' % ((batch_i + 1 + (i * bat_per_epo)), i + 1, n_epochs, batch_i + 1, bat_per_epo, d_loss1, d_loss2, g_loss, elapsed_time))
 
-            # summarize performance
-            # print('>step: %d >epoch %d-%d >batch %d-%d, D_loss_real[%.3f]  D_loss_fake[%.3f]  G_loss[%.3f]  time: %s' % ((batch_i + 1 + (i * bat_per_epo)), i + 1, n_epochs, batch_i + 1, bat_per_epo, d_loss1, d_loss2, g_loss, elapsed_time))
+    # Save the loss values in the array
+    Disc_loss_real.append(d_loss1)
+    Disc_loss_fake.append(d_loss2)
+    Gen_loss.append(g_loss)
 
-            # Save the loss values in the array
-            Disc_loss_real.append(d_loss1)
-            Disc_loss_fake.append(d_loss2)
-            Gen_loss.append(g_loss)
+    return (g_model, d_model, gan_model), (Disc_loss_real, Disc_loss_fake, Gen_loss)
 
-            # summarize model performance
-            # set the number of times the model and images are saved
-            if (batch_i + 1) % 500 == 0:
-                outputs.summarize_performance(path, i, batch_i, g_model)
+# WHTA TO DO?
+# # select a sample of input images
+# [X_realB, X_realA] = inputs.load_batch(dataset, 3)
+# # generate a batch of fake samples
+# X_fakeB = g_model.predict(X_realA)
 
-    # Save the loss values to NumPy files
-    if not os.path.exists(f"{path}/results"):
-        os.makedirs(f"{path}/results")
-    numpy.save(f'{path}/results/Disc_loss_real.npy', numpy.array(Disc_loss_real))
-    numpy.save(f'{path}/results/Disc_loss_fake.npy', numpy.array(Disc_loss_fake))
-    numpy.save(f'{path}/results/Gen_loss.npy',       numpy.array(Gen_loss))
+# # scale all pixels from [-1,1] to [0,1]
+# X_realA = (X_realA + 1) / 2.0
+# X_realB = (X_realB + 1) / 2.0
+# X_fakeB = (X_fakeB + 1) / 2.0
+
+# # for i in range(3):
+#     # plt.imsave(f"{path}/results/Generated_B{batch+1}_{i}.tiff", X_fakeB[i])
+#     # plt.imsave(os.path.join(path, "results", 'Generated_B%d_%d.tiff' % (batch + 1, i + 1), X_fakeB[i]))
 
 # plot source, generated and target images
 def plot_images(src_img, gen_img, tar_img, patche):
@@ -130,7 +129,7 @@ def plot_images(src_img, gen_img, tar_img, patche):
     imageio.imwrite(path_image + 'Original/%d.tiff' % (patche + 1), tar_im)
 # __________________________________
 
-def test(model, dataset, img_shape):
+def test(model, dataset):
     start_time = datetime.datetime.now()
     for index, (tar_image, src_image) in enumerate(dataset):
         print(f"Testing image #{index+1}")

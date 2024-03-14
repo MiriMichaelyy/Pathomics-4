@@ -1,9 +1,8 @@
 import keras
 import tensorflow as tf
 
-# Import the Discriminator and Generator classes from the previously defined modules
-from generator     import Generator
-from discriminator import Discriminator
+from Models.generator     import Generator
+from Models.discriminator import Discriminator
 
 class StainToStainGAN(keras.models.Model):
     def __init__(self, image_shape):
@@ -18,7 +17,7 @@ class StainToStainGAN(keras.models.Model):
         self.discriminator.model.trainable = False
 
         # Define source image input
-        in_src = tensorflow.keras.layers.Input(shape=image_shape)
+        in_src = tf.keras.layers.Input(shape=image_shape)
 
         # Connect source image to generator input
         gen_out = self.generator.model(in_src)
@@ -49,5 +48,22 @@ class StainToStainGAN(keras.models.Model):
         return d_loss, g_loss
 
 # Example usage:
-image_shape = (256, 256, 3)  # Example image shape
-gan = StainToStainGAN(image_shape)
+# image_shape = (256, 256, 3)  # Example image shape
+# gan = StainToStainGAN(image_shape)
+
+# define the combined generator and discriminator model, for updating the generator
+def define_gan(g_model, d_model, image_shape):
+    # make weights in the discriminator not trainable
+    d_model.trainable = False
+    # define the source image
+    in_src = tf.keras.layers.Input(shape=image_shape)
+    # connect the source image to the generator input
+    gen_out = g_model(in_src)
+    # connect the source input and generator output to the discriminator input
+    dis_out = d_model([in_src, gen_out])
+    # src image as input, generated image and classification output
+    model = keras.models.Model(in_src, [dis_out, gen_out])
+    # compile model
+    opt = keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.5)
+    model.compile(loss=['binary_crossentropy', 'mae'], optimizer=opt, loss_weights=[1, 100])
+    return model
