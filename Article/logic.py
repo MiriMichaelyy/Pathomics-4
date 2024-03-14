@@ -1,4 +1,5 @@
 import os
+import math
 import numpy
 import random
 import imageio
@@ -36,33 +37,21 @@ def process_image(image, size):
 
     return colored_images, grayscale_images, combined_images
 
-def split_dataset(dataset, split):
-    def gen_dataset(color, grayscale, combined):
-        for color_img, grayscale_img, combined_img in zip(color, grayscale, combined):
-            yield color_img, grayscale_img, combined_img
+def split_dataset(dataset, dataset_length, split):
+    def gen_dataset(dataset, maximum):
+        for index, (color, grayscale) in enumerate(zip(*dataset)):
+            if index < maximum:
+                yield color, grayscale
+            else:
+                return
 
-    color, grayscale, combined = dataset
-    train_set = gen_dataset(color, grayscale, combined)
-    test_set  = gen_dataset(color, grayscale, combined)
-    val_set   = gen_dataset(color, grayscale, combined)
+    train_set = gen_dataset(dataset, math.floor(dataset_length * split[0]))
+    test_set  = gen_dataset(dataset, math.floor(dataset_length * split[1]))
+    val_set   = gen_dataset(dataset, math.floor(dataset_length * split[2]))
 
     return train_set, test_set, val_set
 
-def preprocess(dataset, split, size):
-    color_images     = []
-    grayscale_images = []
-    combined_images  = []
-
-    for index, image in enumerate(dataset):
-        color, grayscale, combined = process_image(image, size)
-        color_images     += color
-        combined_images  += combined
-        grayscale_images += grayscale
-
-    new_dataset = (color_images, grayscale_images, combined_images)
-    return split_dataset(new_dataset, split)
-
-def train(models, dataset):
+def train(models, batch):
     d_model, g_model, gan_model = models
     Disc_loss_real = []
     Disc_loss_fake = []
@@ -76,7 +65,7 @@ def train(models, dataset):
 
     # select a batch of real samples
     start_time = datetime.datetime.now()
-    for i, (X_realB, X_realA, combined) in enumerate(dataset):
+    for i, (X_realB, X_realA) in enumerate(batch):
 
         # Generate a batch of fake samples.
         X_fakeB = g_model.predict(X_realA)
@@ -113,7 +102,7 @@ def train(models, dataset):
 
 # # for i in range(3):
 #     # plt.imsave(f"{path}/results/Generated_B{batch+1}_{i}.tiff", X_fakeB[i])
-#     # plt.imsave(os.path.join(path, "results", 'Generated_B%d_%d.tiff' % (batch + 1, i + 1), X_fakeB[i]))
+#     # plt.imsave(os.path.join(path, 'Generated_B%d_%d.tiff' % (batch + 1, i + 1), X_fakeB[i]))
 
 # plot source, generated and target images
 def plot_images(src_img, gen_img, tar_img, patche):

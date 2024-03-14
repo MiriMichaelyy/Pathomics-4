@@ -4,25 +4,41 @@ import inputs
 import matplotlib
 import matplotlib.pyplot as plt
 
-def save_dataset(path, dataset):
+def save_original(path, dataset, offset):
     if not os.path.exists(path):
         os.makedirs(path)
-
-    offset = len(os.listdir(path))
     for index, image in enumerate(dataset):
-        image.save(f"{path}/{offset + index + 1}.tiff")
+        image.save(os.path.join(path, f"{offset + index + 1}.tiff"))
+    return index + 1
+
+def save_originals(path, color, grayscale, combined, total):
+    count = save_original(os.path.join(path, "color"),     color,     total)
+    count = save_original(os.path.join(path, "grayscale"), grayscale, total)
+    count = save_original(os.path.join(path, "combined"),  combined,  total)
+    return count
+
+def save_dataset(path, datasets):
+    if not os.path.exists(path):
+        os.makedirs(path)
+    for index, (color, grayscale) in enumerate(datasets):
+        color.save    (os.path.join(path, "color",     f"{index + 1}.tiff"))
+        grayscale.save(os.path.join(path, "grayscale", f"{index + 1}.tiff"))
+
+def save_split(path, train, test, val):
+    save_dataset(os.path.join(path, "train"), train)
+    save_dataset(os.path.join(path, "test"),  test)
+    save_dataset(os.path.join(path, "val"),   val)
 
 def save_losses(losses, path, epoch):
-    numpy.save(f'{path}/results/E{epoch}_Disc_loss_real.npy', numpy.array(losses[0]))
-    numpy.save(f'{path}/results/E{epoch}_Disc_loss_fake.npy', numpy.array(losses[1]))
-    numpy.save(f'{path}/results/E{epoch}_Gen_loss.npy',       numpy.array(losses[2]))
+    numpy.save(os.path.join(path, f'E{epoch}_Disc_loss_real.npy'), numpy.array(losses[0]))
+    numpy.save(os.path.join(path, f'E{epoch}_Disc_loss_fake.npy'), numpy.array(losses[1]))
+    numpy.save(os.path.join(path, f'E{epoch}_Gen_loss.npy'),       numpy.array(losses[2]))
 
 def save_models(models, path, epoch):
     g_model, d_model, gan_model = models
-
-    g_model.save  (f"{path}/models/g_model_{epoch}.keras")
-    d_model.save  (f"{path}/models/d_model_{epoch}.keras")
-    gan_model.save(f"{path}/models/gan_model_{epoch}.keras")
+    g_model.save  (os.path.join(path, "models", f"g_model_{epoch}.keras"))
+    d_model.save  (os.path.join(path, "models", f"d_model_{epoch}.keras"))
+    gan_model.save(os.path.join(path, "models", f"gan_model_{epoch}.keras"))
 
 def smooth_curve_gen(points, factor=0.6):
     smoothed_points = []
