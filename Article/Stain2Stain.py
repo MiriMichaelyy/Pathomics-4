@@ -1,3 +1,4 @@
+#!/bin/python3
 import os
 import sys
 
@@ -53,10 +54,8 @@ if not os.path.exists(f"{results_path}/models"):
 ##############################
 # MAIN LOGIC                 #
 ##############################
-num_of_samples = 0
 for image in inputs.load_dataset(dataset_path):
     color, grayscale, combined = logic.process_image(image, img_shape)
-    num_of_samples += len(color)
 
     outputs.save_dataset(f"{results_path}/color",     color)
     outputs.save_dataset(f"{results_path}/combined",  combined)
@@ -67,7 +66,7 @@ combined  = inputs.load_dataset(f"{dataset_path}/combined")
 grayscale = inputs.load_dataset(f"{dataset_path}/grayscale")
 
 datasets         = (color, grayscale, combined)
-train, test, val = logic.split_dataset(datasets, num_of_samples, dataset_split)
+train, test, val = logic.split_dataset(datasets, dataset_split)
 
 outputs.save_dataset(f"{results_path}/train", train)
 outputs.save_dataset(f"{results_path}/test",  test)
@@ -84,8 +83,8 @@ for epoch in range(epochs):
     outputs.save_models(models, results_path, epoch + 1)
 
 print("Testing...")
-test = inputs.load_dataset(f"{dataset_path}/test")
-logic.test(inputs.get_best_model(results_path), test)
+# test = inputs.load_dataset(f"{dataset_path}/test")
+# logic.test(inputs.get_best_model(results_path), test)
 
 # Outputs of the models.
 outputs.plot_outputs('seaborn')

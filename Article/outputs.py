@@ -20,9 +20,9 @@ def save_losses(losses, path, epoch):
 def save_models(models, path, epoch):
     g_model, d_model, gan_model = models
 
-    g_model.save  (f"{path}/models/g_model_{epoch}.h5")
-    d_model.save  (f"{path}/models/d_model_{epoch}.h5")
-    gan_model.save(f"{path}/models/gan_model_{epoch}.h5")
+    g_model.save  (f"{path}/models/g_model_{epoch}.keras")
+    d_model.save  (f"{path}/models/d_model_{epoch}.keras")
+    gan_model.save(f"{path}/models/gan_model_{epoch}.keras")
 
 def smooth_curve_gen(points, factor=0.6):
     smoothed_points = []

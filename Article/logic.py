@@ -36,16 +36,15 @@ def process_image(image, size):
 
     return colored_images, grayscale_images, combined_images
 
-def split_dataset(dataset, dataset_len, split):
-    def gen_dataset(color, grayscale, combined, maximum):
-        while maximum > 0:
-            yield next(color), next(grayscale), next(combined)
-            maximum -= 1
+def split_dataset(dataset, split):
+    def gen_dataset(color, grayscale, combined):
+        for color_img, grayscale_img, combined_img in zip(color, grayscale, combined):
+            yield color_img, grayscale_img, combined_img
 
     color, grayscale, combined = dataset
-    train_set = gen_dataset(color, grayscale, combined, dataset_len * split[0])
-    test_set  = gen_dataset(color, grayscale, combined, dataset_len * split[1])
-    val_set   = gen_dataset(color, grayscale, combined, dataset_len * split[2])
+    train_set = gen_dataset(color, grayscale, combined)
+    test_set  = gen_dataset(color, grayscale, combined)
+    val_set   = gen_dataset(color, grayscale, combined)
 
     return train_set, test_set, val_set
 
@@ -94,10 +93,10 @@ def train(models, dataset):
         # summarize performance
         # print('>step: %d >epoch %d-%d >batch %d-%d, D_loss_real[%.3f]  D_loss_fake[%.3f]  G_loss[%.3f]  time: %s' % ((batch_i + 1 + (i * bat_per_epo)), i + 1, n_epochs, batch_i + 1, bat_per_epo, d_loss1, d_loss2, g_loss, elapsed_time))
 
-    # Save the loss values in the array
-    Disc_loss_real.append(d_loss1)
-    Disc_loss_fake.append(d_loss2)
-    Gen_loss.append(g_loss)
+        # Save the loss values in the array
+        Disc_loss_real.append(d_loss1)
+        Disc_loss_fake.append(d_loss2)
+        Gen_loss.append(g_loss)
 
     return (g_model, d_model, gan_model), (Disc_loss_real, Disc_loss_fake, Gen_loss)
 
