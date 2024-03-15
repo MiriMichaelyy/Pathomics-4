@@ -61,7 +61,7 @@ def smooth_curve_dis(points, factor=0.3):
             smoothed_points.append(point)
     return smoothed_points
 
-def plot_outputs(style='seaborn', Disc_loss_real=None, Disc_loss_fake=None, Gen_loss=None):
+def plot_outputs(Disc_loss_real=None, Disc_loss_fake=None, Gen_loss=None):
     if Disc_loss_real is None:
         Disc_loss_real = numpy.load('Disc_loss_real.npy')
     if Disc_loss_fake is None:
@@ -69,8 +69,7 @@ def plot_outputs(style='seaborn', Disc_loss_real=None, Disc_loss_fake=None, Gen_
     if Gen_loss is None:
         Gen_loss = numpy.load('Gen_loss.npy')
 
-    epoch = range(0, len(Gen_loss))
-    matplotlib.style.use(sty)
+    epoch = range(0, len(Disc_loss_real))
     fig, ax = plt.subplots(figsize=(6, 4))
     plt.plot(epoch, Disc_loss_real, linewidth=0.8, color='#9b0000', marker='.')
     plt.title('Discriminator loss real')

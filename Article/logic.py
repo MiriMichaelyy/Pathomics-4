@@ -51,7 +51,7 @@ def split_dataset(dataset, dataset_length, split):
 
     return train_set, test_set, val_set
 
-def train(models, batch):
+def train(models, color_arr, gray_arr):
     d_model, g_model, gan_model = models
     Disc_loss_real = []
     Disc_loss_fake = []
@@ -65,7 +65,7 @@ def train(models, batch):
 
     # select a batch of real samples
     start_time = datetime.datetime.now()
-    for i, (X_realB, X_realA) in enumerate(batch):
+    for i, (X_realB, X_realA) in enumerate(zip(color_arr, gray_arr)):
 
         # Generate a batch of fake samples.
         X_fakeB = g_model.predict(X_realA)
@@ -79,15 +79,32 @@ def train(models, batch):
         g_loss, _, _ = gan_model.train_on_batch(X_realA, [y_real, X_realB])
         elapsed_time = datetime.datetime.now() - start_time
 
-        # summarize performance
-        # print('>step: %d >epoch %d-%d >batch %d-%d, D_loss_real[%.3f]  D_loss_fake[%.3f]  G_loss[%.3f]  time: %s' % ((batch_i + 1 + (i * bat_per_epo)), i + 1, n_epochs, batch_i + 1, bat_per_epo, d_loss1, d_loss2, g_loss, elapsed_time))
-
         # Save the loss values in the array
         Disc_loss_real.append(d_loss1)
         Disc_loss_fake.append(d_loss2)
         Gen_loss.append(g_loss)
 
     return (g_model, d_model, gan_model), (Disc_loss_real, Disc_loss_fake, Gen_loss)
+
+
+def plot_images(src_img, gen_img, tar_img, patche):
+    src_im = numpy.squeeze(numpy.array(src_img))
+    gen_im = numpy.squeeze(numpy.array(gen_img))
+    tar_im = numpy.squeeze(numpy.array(tar_img))
+
+    path_image = 'C:/Users/mirim/PycharmProjects/STST_replication/results/'
+
+    imageio.imwrite(path_image + 'Input/%d.tiff'     % (patche + 1), src_im)
+    imageio.imwrite(path_image + 'Generated/%d.tiff' % (patche + 1), gen_im)
+    imageio.imwrite(path_image + 'Original/%d.tiff'  % (patche + 1), tar_im)
+
+def test(model, dataset):
+    start_time = datetime.datetime.now()
+    for index, (tar_image, src_image) in enumerate(dataset):
+        print(f"Testing image #{index+1}")
+        gen_image = model.predict(src_image)
+        # plot_images(src_image, gen_image, tar_image, sample)
+    print('time: ', datetime.datetime.now() - start_time)
 
 # WHTA TO DO?
 # # select a sample of input images
@@ -103,24 +120,3 @@ def train(models, batch):
 # # for i in range(3):
 #     # plt.imsave(f"{path}/results/Generated_B{batch+1}_{i}.tiff", X_fakeB[i])
 #     # plt.imsave(os.path.join(path, 'Generated_B%d_%d.tiff' % (batch + 1, i + 1), X_fakeB[i]))
-
-# plot source, generated and target images
-def plot_images(src_img, gen_img, tar_img, patche):
-    src_im = numpy.squeeze(numpy.array(src_img))
-    gen_im = numpy.squeeze(numpy.array(gen_img))
-    tar_im = numpy.squeeze(numpy.array(tar_img))
-
-    path_image = 'C:/Users/mirim/PycharmProjects/STST_replication/results/'
-
-    imageio.imwrite(path_image + 'Input/%d.tiff' % (patche + 1), src_im)
-    imageio.imwrite(path_image + 'Generated/%d.tiff' % (patche + 1), gen_im)
-    imageio.imwrite(path_image + 'Original/%d.tiff' % (patche + 1), tar_im)
-# __________________________________
-
-def test(model, dataset):
-    start_time = datetime.datetime.now()
-    for index, (tar_image, src_image) in enumerate(dataset):
-        print(f"Testing image #{index+1}")
-        gen_image = model.predict(src_image)
-        # plot_images(src_image, gen_image, tar_image, sample)
-    print('time: ', datetime.datetime.now() - start_time)

@@ -33,4 +33,4 @@ def load_batch(datasets, size):
     return color_arr, gray_arr
 
 def get_best_model(path):
-    return keras.models.load_model(os.path.join(path, "models", "model_15.keras"))
+    return keras.models.load_model(os.path.join(path, "models", "g_model_15.keras"))

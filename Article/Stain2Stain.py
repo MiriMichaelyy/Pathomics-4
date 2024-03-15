@@ -99,20 +99,20 @@ for epoch in range(epochs):
     # Split the dataset into equal batches.
     # Convert the image into numpy arrays.
     batch_size = dataset_size // epochs
-    batch      = inputs.load_batch(zip(color, grayscale), batch_size)
+    color_arr, gray_arr = inputs.load_batch(zip(color, grayscale), batch_size)
 
     # Train the model and calculate losses.
     print(f"Epoch #{epoch+1} | Batch: {epoch * batch_size} - {(epoch + 1) * batch_size}")
-    models, losses = logic.train(models, batch)
+    models, losses = logic.train(models, color_arr, gray_arr)
 
     # Save the losses and models in the results directory.
     outputs.save_losses(losses, results_path, epoch + 1)
     outputs.save_models(models, results_path, epoch + 1)
 
 print("Starting best model test.")
-test  = inputs.load_dataset(os.path.join(results_path, "test"))
-model = inputs.get_best_model(results_path)
-logic.test(model, test)
+# test  = inputs.load_dataset(os.path.join(results_path, "test"))
+# model = inputs.get_best_model(results_path)
+# logic.test(model, test)
 
 # Outputs of the models.
-outputs.plot_outputs('seaborn')
+outputs.plot_outputs(*losses)
