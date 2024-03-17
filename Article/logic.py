@@ -95,7 +95,7 @@ def plot_images(gray_img, gen_img, color_img, patch):
 
     image_path = os.path.join(results_path, "test")
     if not os.path.exists(image_path):
-    os.makedirs(image_path)
+        os.makedirs(image_path)
     
     imageio.imwrite(image_path + 'Input/%d.tiff'     % (patch + 1), gray_im)
     imageio.imwrite(image_path + 'Generated/%d.tiff' % (patch + 1), gen_im)
