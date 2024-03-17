@@ -87,23 +87,26 @@ def train(models, color_arr, gray_arr):
     return (g_model, d_model, gan_model), (Disc_loss_real, Disc_loss_fake, Gen_loss)
 
 
-def plot_images(src_img, gen_img, tar_img, patche):
-    src_im = numpy.squeeze(numpy.array(src_img))
+def plot_images(gray_img, gen_img, color_img, patch):
+    #squeeze removes unnecessary parameters... here used to make numpy array compatible with imwrite (leaves only parameters required as imwrite inputs
+    gray_im = numpy.squeeze(numpy.array(gray_img))
     gen_im = numpy.squeeze(numpy.array(gen_img))
-    tar_im = numpy.squeeze(numpy.array(tar_img))
+    color_im = numpy.squeeze(numpy.array(color_img))
 
-    path_image = 'C:/Users/mirim/PycharmProjects/STST_replication/results/'
-
-    imageio.imwrite(path_image + 'Input/%d.tiff'     % (patche + 1), src_im)
-    imageio.imwrite(path_image + 'Generated/%d.tiff' % (patche + 1), gen_im)
-    imageio.imwrite(path_image + 'Original/%d.tiff'  % (patche + 1), tar_im)
+    image_path = os.path.join(results_path, "test")
+    if not os.path.exists(image_path):
+    os.makedirs(image_path)
+    
+    imageio.imwrite(image_path + 'Input/%d.tiff'     % (patch + 1), gray_im)
+    imageio.imwrite(image_path + 'Generated/%d.tiff' % (patch + 1), gen_im)
+    imageio.imwrite(image_path + 'Original/%d.tiff'  % (patch + 1), color_im)
 
 def test(model, dataset):
     start_time = datetime.datetime.now()
-    for index, (tar_image, src_image) in enumerate(dataset):
+    for index, (color_image, gray_image) in enumerate(dataset):
         print(f"Testing image #{index+1}")
-        gen_image = model.predict(src_image)
-        # plot_images(src_image, gen_image, tar_image, sample)
+        gen_image = model.predict(gray_image)
+        plot_images(gray_image, gen_image, color_image, sample)
     print('time: ', datetime.datetime.now() - start_time)
 
 # WHTA TO DO?
