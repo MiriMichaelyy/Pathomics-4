@@ -1,0 +1,28 @@
+TODO:
+1. get_best_model
+   Description: figure out an algorithm for choosing the best model for testing.
+2. test/plot_images
+   Description: Change the name, figure out logic (squeeze) and implement it in the test.
+                (Save images for visualization purposes).
+3. Comment Code
+   Description: Figure out commented code at the end of logic.py file. (WHAT TO DO?)
+                (Came from summarize_performance function)
+4. plot_outputs
+   Description: Fix outputs in plot_outputs function.
+5. Change Article code name.
+
+TODO (Hardest to easiest):
+3. Comment Code     | Owner: Lior
+4. test/plot_images | Owner: Miri
+2. Fix test         | Owner: Miri 
+1. get_best_model   | Owner: Lior
+5. Change folder name.
+6. Add if-preprocess
+
+===================================================
+Overall TODO:
+1. Article on new data (+ fixes)
+2. Reverse engineer Pathomics 3
+   Description: Identify normalization, understand inputs and outputs.
+3. Integrate new model into Pathomics 3
+   Description: Replace normalization with our new model.

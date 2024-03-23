@@ -5,8 +5,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 def save_original(path, dataset, offset):
-    if not os.path.exists(path):
-        os.makedirs(path)
+    os.makedirs(path, exist_ok=True)
     for index, image in enumerate(dataset):
         image.save(os.path.join(path, f"{offset + index + 1}.tiff"))
     return index + 1
@@ -18,8 +17,7 @@ def save_originals(path, color, grayscale, combined, total):
     return count
 
 def save_dataset(path, datasets):
-    if not os.path.exists(path):
-        os.makedirs(path)
+    os.makedirs(path, exist_ok=True)
     for index, (color, grayscale) in enumerate(datasets):
         color.save    (os.path.join(path, "color",     f"{index + 1}.tiff"))
         grayscale.save(os.path.join(path, "grayscale", f"{index + 1}.tiff"))
