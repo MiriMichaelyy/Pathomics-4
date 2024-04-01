@@ -12,15 +12,17 @@ import preprocess
 # ARGUMENTS & PARAMETERS     #
 ##############################
 parser = argparse.ArgumentParser(description="Normalize a dataset of images.")
-parser.add_argument("--dataset",      action="store",      required=True, type=str,                      help="Path to the original dataset.")
-parser.add_argument("--channels",     action="store",      default=3,     type=int,                      help="Number of channels in the images.")
-parser.add_argument("--image_width",  action="store",      default=256,   type=int,   dest="width",      help="Width of the final images.")
-parser.add_argument("--image_height", action="store",      default=256,   type=int,   dest="height",     help="Height of the final images.")
-parser.add_argument("--train",        action="store",      default=0.5,   type=float,                    help="Percentage of the images that go into training.")
-parser.add_argument("--test",         action="store",      default=0.5,   type=float,                    help="Percentage of the images that go into testing.")
-parser.add_argument("--val",          action="store",      default=0,     type=float, dest="validation", help="Percentage of the images that go into validation.")
-parser.add_argument("--epochs",       action="store",      default=15,    type=int,                      help="Number of epochs, in each train the model with a random batch of images.")
-parser.add_argument("--preprocessed", action="store_true", default=False,                                help="Preprocess the dataset into color, grayscale & combined and then split into train, test and validation.")
+parser.add_argument("--dataset",       action="store",      required=True, type=str,                       help="Path to the original dataset.")
+parser.add_argument("--channels",      action="store",      default=3,     type=int,                       help="Number of channels in the images.")
+parser.add_argument("--image_width",   action="store",      default=256,   type=int,   dest="width",       help="Width of the final images.")
+parser.add_argument("--image_height",  action="store",      default=256,   type=int,   dest="height",      help="Height of the final images.")
+parser.add_argument("--train",         action="store",      default=0.5,   type=float,                     help="Percentage of the images that go into training.")
+parser.add_argument("--test",          action="store",      default=0.5,   type=float,                     help="Percentage of the images that go into testing.")
+parser.add_argument("--val",           action="store",      default=0,     type=float, dest="validation",  help="Percentage of the images that go into validation.")
+parser.add_argument("--epochs",        action="store",      default=15,    type=int,                       help="Number of epochs, in each train the model with a random batch of images.")
+parser.add_argument("--preprocessed",  action="store_true", default=False,                                 help="Preprocess the dataset into color, grayscale & combined and then split into train, test and validation.")
+parser.add_argument("--input_format",  action="store",      default="scn", choices=["scn", "png", "tiff"], help="Input images format.")
+parser.add_argument("--output_format", action="store",      default="png", choices=["scn", "png", "tiff"], help="Output format to save.")
 args = parser.parse_args()
 
 ##############################
@@ -81,17 +83,17 @@ if not args.preprocessed:
     # Generate basic processed dataset.
     size = 0
     print(f"Splitting original images into {args.width}x{args.height} (color, grayscale & combined).")
-    for image in inputs.load_dataset(args.dataset, suffix="tiff"):
+    for image in inputs.load_dataset(args.dataset, suffix=args.input_format):
         color, grayscale, combined = preprocess.process_image(image, shape)
-        size += outputs.save_dataset(os.path.join(processed_path, "color"),     color,     offset=size, suffix="tiff")
-        size += outputs.save_dataset(os.path.join(processed_path, "grayscale"), grayscale, offset=size, suffix="tiff")
-        size += outputs.save_dataset(os.path.join(processed_path, "combined"),  combined,  offset=size, suffix="tiff")
+        size += outputs.save_dataset(os.path.join(processed_path, "color"),     color,     offset=size, suffix=args.output_format)
+        size += outputs.save_dataset(os.path.join(processed_path, "grayscale"), grayscale, offset=size, suffix=args.output_format)
+        size += outputs.save_dataset(os.path.join(processed_path, "combined"),  combined,  offset=size, suffix=args.output_format)
 
     # Load dataset generators.
     print("Loading color & grayscale datasets.")
-    color     = inputs.load_dataset(os.path.join(processed_path, "color"),     suffix="tiff")
-    grayscale = inputs.load_dataset(os.path.join(processed_path, "grayscale"), suffix="tiff")
-    combined  = inputs.load_dataset(os.path.join(processed_path, "combined"),  suffix="tiff")
+    color     = inputs.load_dataset(os.path.join(processed_path, "color"),     suffix=args.output_format)
+    grayscale = inputs.load_dataset(os.path.join(processed_path, "grayscale"), suffix=args.output_format)
+    combined  = inputs.load_dataset(os.path.join(processed_path, "combined"),  suffix=args.output_format)
 
     # Create sup-datasets.
     print(f"Splitting datasets into train ({args.train}%), test ({args.test}%) and validation ({args.validation}%).")
@@ -99,25 +101,25 @@ if not args.preprocessed:
 
     # Save processed datasets.
     color, grayscale, combined = train
-    outputs.save_dataset(os.path.join(processed_path, "train", "color"),     color,     offset=0, suffix="tiff")
-    outputs.save_dataset(os.path.join(processed_path, "train", "grayscale"), grayscale, offset=0, suffix="tiff")
-    outputs.save_dataset(os.path.join(processed_path, "train", "combined"),  combined,  offset=0, suffix="tiff")
+    outputs.save_dataset(os.path.join(processed_path, "train", "color"),     color,     offset=0, suffix=args.output_format)
+    outputs.save_dataset(os.path.join(processed_path, "train", "grayscale"), grayscale, offset=0, suffix=args.output_format)
+    outputs.save_dataset(os.path.join(processed_path, "train", "combined"),  combined,  offset=0, suffix=args.output_format)
     color, grayscale, combined = test
-    outputs.save_dataset(os.path.join(processed_path, "test", "color"),     color,     offset=0, suffix="tiff")
-    outputs.save_dataset(os.path.join(processed_path, "test", "grayscale"), grayscale, offset=0, suffix="tiff")
-    outputs.save_dataset(os.path.join(processed_path, "test", "combined"),  combined,  offset=0, suffix="tiff")
+    outputs.save_dataset(os.path.join(processed_path, "test", "color"),     color,     offset=0, suffix=args.output_format)
+    outputs.save_dataset(os.path.join(processed_path, "test", "grayscale"), grayscale, offset=0, suffix=args.output_format)
+    outputs.save_dataset(os.path.join(processed_path, "test", "combined"),  combined,  offset=0, suffix=args.output_format)
     color, grayscale, combined = val
-    outputs.save_dataset(os.path.join(processed_path, "val", "color"),     color,     offset=0, suffix="tiff")
-    outputs.save_dataset(os.path.join(processed_path, "val", "grayscale"), grayscale, offset=0, suffix="tiff")
-    outputs.save_dataset(os.path.join(processed_path, "val", "combined"),  combined,  offset=0, suffix="tiff")
+    outputs.save_dataset(os.path.join(processed_path, "val", "color"),     color,     offset=0, suffix=args.output_format)
+    outputs.save_dataset(os.path.join(processed_path, "val", "grayscale"), grayscale, offset=0, suffix=args.output_format)
+    outputs.save_dataset(os.path.join(processed_path, "val", "combined"),  combined,  offset=0, suffix=args.output_format)
 
 ##############################
 # MAIN LOGIC                 #
 ##############################
 # Train & test the GAN model.
 print("Starting to train models.")
-color      = inputs.load_dataset(os.path.join(processed_path, "train", "color"),     suffix="tiff")
-grayscale  = inputs.load_dataset(os.path.join(processed_path, "train", "grayscale"), suffix="tiff")
+color      = inputs.load_dataset(os.path.join(processed_path, "train", "color"),     suffix=args.output_format)
+grayscale  = inputs.load_dataset(os.path.join(processed_path, "train", "grayscale"), suffix=args.output_format)
 size       = inputs.get_size(os.path.join(processed_path, "train", "color"))
 size      += inputs.get_size(os.path.join(processed_path, "test",  "color"))
 size      += inputs.get_size(os.path.join(processed_path, "val",   "color"))
@@ -139,7 +141,7 @@ for epoch in range(args.epochs):
     outputs.save_models(models, results_path, epoch + 1)
 
 print("Starting best model test.")
-test  = inputs.load_dataset(os.path.join(results_path, "test"), suffix="tiff")
+test  = inputs.load_dataset(os.path.join(results_path, "test"), suffix=args.output_format)
 model = inputs.get_best_model(results_path)
 logic.test(results_path, model, test)
 
