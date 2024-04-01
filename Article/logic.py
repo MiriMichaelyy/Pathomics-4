@@ -3,6 +3,9 @@ import numpy
 import imageio
 import datetime
 
+def normalize(model, image):
+    return model.predict(image)
+
 def train(models, batch):
     d_model, g_model, gan_model = models
     Disc_loss_real = []

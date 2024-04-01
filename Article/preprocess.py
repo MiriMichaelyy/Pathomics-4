@@ -28,11 +28,11 @@ def process_image(image, size):
 
     return colored_images, grayscale_images, combined_images
 
-def split_dataset(dataset, dataset_length, split):
+def split_dataset(datasets, dataset_length, split):
     def gen_dataset(dataset, maximum):
-        for index, (color, grayscale) in enumerate(zip(*dataset)):
+        for index, image in enumerate(dataset):
             if index < maximum:
-                yield color, grayscale
+                yield image
             else:
                 return
 
@@ -40,11 +40,11 @@ def split_dataset(dataset, dataset_length, split):
     test_size  = math.floor(dataset_length * split[1])
     val_size   = math.floor(dataset_length * split[2])
 
-    while train_size + test_size + val_size < dataset_length:
-        train_size += 1
+    if train_size + test_size + val_size < dataset_length:
+        train_size += (dataset_length - train_size + test_size + val_size)
 
-    train_set = gen_dataset(dataset, train_size)
-    test_set  = gen_dataset(dataset, test_size)
-    val_set   = gen_dataset(dataset, val_size)
+    train_set = tuple(map(lambda dataset: gen_dataset(dataset, train_size), datasets))
+    test_set  = tuple(map(lambda dataset: gen_dataset(dataset, test_size),  datasets))
+    val_set   = tuple(map(lambda dataset: gen_dataset(dataset, val_size),   datasets))
 
     return train_set, test_set, val_set
