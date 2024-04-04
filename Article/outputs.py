@@ -1,18 +1,19 @@
 import os
 import PIL
 import numpy
-import inputs
 import matplotlib
 import matplotlib.pyplot as plt
 
-def save_dataset(path, dataset, offset=0, suffix="png"):
+def save_dataset(path, dataset, offset=0, suffix="png", has_color=True):
     os.makedirs(path, exist_ok=True)
     count = 0
     for image in dataset:
         count += 1
-        image = PIL.Image.fromarray((image * 255).astype(numpy.uint8))
-        image.save(os.path.join(path, f"{offset + count}.{suffix}"))
-        # plt.imsave(os.path.join(path, f"{offset + count}.{suffix}"), image)
+        if has_color:
+            plt.imsave(os.path.join(path, f"{offset + count}.{suffix}"), image)
+        else:
+            image = PIL.Image.fromarray((image * 255).astype(numpy.uint8))
+            image.save(os.path.join(path, f"{offset + count}.{suffix}"))
     return count
 
 def save_losses(path, losses, epoch):
@@ -23,8 +24,8 @@ def save_losses(path, losses, epoch):
 def save_models(path, models, epoch):
     g_model, d_model, gan_model = models
     g_model.save  (os.path.join(path, "models", f"g_model_{epoch}.keras"))
-    d_model.save  (os.path.join(path, "models", f"d_model_{epoch}.keras"))
-    gan_model.save(os.path.join(path, "models", f"gan_model_{epoch}.keras"))
+    # d_model.save  (os.path.join(path, "models", f"d_model_{epoch}.keras"))
+    # gan_model.save(os.path.join(path, "models", f"gan_model_{epoch}.keras"))
 
 def smooth_curve_gen(points, factor=0.6):
     smoothed_points = []

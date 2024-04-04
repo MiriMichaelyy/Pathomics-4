@@ -63,7 +63,6 @@ os.makedirs(os.path.join(processed_path, "train",      "combined"),  exist_ok=Tr
 os.makedirs(os.path.join(processed_path, "test",       "color"),     exist_ok=True)
 os.makedirs(os.path.join(processed_path, "test",       "grayscale"), exist_ok=True)
 os.makedirs(os.path.join(processed_path, "test",       "combined"),  exist_ok=True)
-os.makedirs(os.path.join(processed_path, "test",       "generated"), exist_ok=True)
 os.makedirs(os.path.join(processed_path, "val",        "color"),     exist_ok=True)
 os.makedirs(os.path.join(processed_path, "val",        "grayscale"), exist_ok=True)
 os.makedirs(os.path.join(processed_path, "val",        "combined"),  exist_ok=True)
@@ -81,14 +80,13 @@ split = (args.train,  args.test,  args.validation)
 ##############################
 if not args.preprocessed:
     # Generate basic processed dataset.
-    size = 0
     print(f"Splitting original images into {args.width}x{args.height} (color, grayscale & combined).")
-    for i, image in enumerate(inputs.load_dataset(args.dataset, suffix=args.input_format)):
+    size = 0
+    for i, image in enumerate(inputs.load_images(args.dataset, suffix=args.input_format)):
         color, grayscale, combined = preprocess.process_image(image, shape)
-        print(f"Image #{i} | size: {size}")
-        outputs.save_dataset(os.path.join(processed_path, "color"),     color,     offset=size, suffix=args.output_format)
-        outputs.save_dataset(os.path.join(processed_path, "grayscale"), grayscale, offset=size, suffix=args.output_format)
-        size += outputs.save_dataset(os.path.join(processed_path, "combined"),  combined,  offset=size, suffix=args.output_format)
+        outputs.save_dataset(os.path.join(processed_path,         "color"),     color,     offset=size, suffix=args.output_format, has_color=True)
+        outputs.save_dataset(os.path.join(processed_path,         "grayscale"), grayscale, offset=size, suffix=args.output_format, has_color=False)
+        size += outputs.save_dataset(os.path.join(processed_path, "combined"),  combined,  offset=size, suffix=args.output_format, has_color=True)
 
     # Load dataset generators.
     print("Loading color & grayscale datasets.")
@@ -97,27 +95,26 @@ if not args.preprocessed:
     combined  = inputs.load_dataset(os.path.join(processed_path, "combined"),  suffix=args.output_format)
 
     # Create sup-datasets.
-    print(f"Splitting datasets into train ({args.train}%), test ({args.test}%) and validation ({args.validation}%).")
+    print(f"Splitting datasets into train ({args.train*100}%), test ({args.test*100}%) and validation ({args.validation*100}%).")
     train, test, val = preprocess.split_dataset((color, grayscale, combined), size, split)
 
     # Save processed datasets.
     color, grayscale, combined = train
-    outputs.save_dataset(os.path.join(processed_path, "train", "color"),     color,     offset=0, suffix=args.output_format)
-    outputs.save_dataset(os.path.join(processed_path, "train", "grayscale"), grayscale, offset=0, suffix=args.output_format)
-    outputs.save_dataset(os.path.join(processed_path, "train", "combined"),  combined,  offset=0, suffix=args.output_format)
+    outputs.save_dataset(os.path.join(processed_path, "train", "color"),     color,     offset=0, suffix=args.output_format, has_color=True)
+    outputs.save_dataset(os.path.join(processed_path, "train", "grayscale"), grayscale, offset=0, suffix=args.output_format, has_color=False)
+    outputs.save_dataset(os.path.join(processed_path, "train", "combined"),  combined,  offset=0, suffix=args.output_format, has_color=True)
     color, grayscale, combined = test
-    outputs.save_dataset(os.path.join(processed_path, "test", "color"),     color,     offset=0, suffix=args.output_format)
-    outputs.save_dataset(os.path.join(processed_path, "test", "grayscale"), grayscale, offset=0, suffix=args.output_format)
-    outputs.save_dataset(os.path.join(processed_path, "test", "combined"),  combined,  offset=0, suffix=args.output_format)
+    outputs.save_dataset(os.path.join(processed_path, "test", "color"),     color,     offset=0, suffix=args.output_format, has_color=True)
+    outputs.save_dataset(os.path.join(processed_path, "test", "grayscale"), grayscale, offset=0, suffix=args.output_format, has_color=False)
+    outputs.save_dataset(os.path.join(processed_path, "test", "combined"),  combined,  offset=0, suffix=args.output_format, has_color=True)
     color, grayscale, combined = val
-    outputs.save_dataset(os.path.join(processed_path, "val", "color"),     color,     offset=0, suffix=args.output_format)
-    outputs.save_dataset(os.path.join(processed_path, "val", "grayscale"), grayscale, offset=0, suffix=args.output_format)
-    outputs.save_dataset(os.path.join(processed_path, "val", "combined"),  combined,  offset=0, suffix=args.output_format)
+    outputs.save_dataset(os.path.join(processed_path, "val", "color"),     color,     offset=0, suffix=args.output_format, has_color=True)
+    outputs.save_dataset(os.path.join(processed_path, "val", "grayscale"), grayscale, offset=0, suffix=args.output_format, has_color=False)
+    outputs.save_dataset(os.path.join(processed_path, "val", "combined"),  combined,  offset=0, suffix=args.output_format, has_color=True)
 
 ##############################
 # MAIN LOGIC                 #
 ##############################
-exit()
 # Train & test the GAN model.
 print("Starting to train models.")
 color      = inputs.load_dataset(os.path.join(processed_path, "train", "color"),     suffix=args.output_format)

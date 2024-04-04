@@ -1,12 +1,25 @@
 import os
+import PIL
 import glob
 import keras
 import numpy
 import imageio
-from PIL import Image
 
 def get_size(path):
     return len(os.listdir(path))
+
+def load_images(path, suffix="png"):
+    if not os.path.exists(path):
+        return []
+
+    dataset = [os.path.join(path, file) for file in os.listdir(path)]
+    dataset = list(filter(os.path.isfile, dataset))
+    dataset = list(filter(lambda item: item.endswith(suffix), dataset))
+    dataset = list(map(os.path.abspath, dataset))
+
+    for full_path in dataset:
+        with PIL.Image.open(full_path) as image:
+            yield image
 
 def load_dataset(path, suffix="png"):
     if not os.path.exists(path):
@@ -18,15 +31,15 @@ def load_dataset(path, suffix="png"):
     dataset = list(map(os.path.abspath, dataset))
 
     for full_path in dataset:
-        yield imageio.imread(full_path).astype(float)
+        yield imageio.imread(full_path).astype(numpy.uint8)
 
 def load_batch(datasets, size):
     for i, (color, grayscale) in enumerate(datasets):
         if i >= size:
             return
-        # color_arr = numpy.array(color).astype(float)     / 127.5 - 1.
-        # gray_arr  = numpy.array(grayscale).astype(float) / 127.5 - 1.
-        yield color_arr, gray_arr
+        color     = color.astype(float)     / 127.5 - 1.
+        grayscale = grayscale.astype(float) / 127.5 - 1.
+        yield color, grayscale
 
 def get_best_model(path):
     loss_arr = []
