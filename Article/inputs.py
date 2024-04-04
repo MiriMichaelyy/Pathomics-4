@@ -18,15 +18,14 @@ def load_dataset(path, suffix="png"):
     dataset = list(map(os.path.abspath, dataset))
 
     for full_path in dataset:
-        with Image.open(full_path) as image:
-            yield image
+        yield imageio.imread(full_path).astype(float)
 
 def load_batch(datasets, size):
     for i, (color, grayscale) in enumerate(datasets):
         if i >= size:
             return
-        color_arr = numpy.array(color).astype(float)     / 127.5 - 1.
-        gray_arr  = numpy.array(grayscale).astype(float) / 127.5 - 1.
+        # color_arr = numpy.array(color).astype(float)     / 127.5 - 1.
+        # gray_arr  = numpy.array(grayscale).astype(float) / 127.5 - 1.
         yield color_arr, gray_arr
 
 def get_best_model(path):

@@ -1,32 +1,40 @@
 import PIL
 import math
+import numpy
 
 def create_patches(image, size):
-    img_width, img_height   = image.size
-    width, height, channels = size
+    img_width, img_height = image.size
+    width, height, _      = size
+    # image = PIL.Image.fromarray((image * 255).astype(numpy.uint8))
     for row in range(0, img_height, height):
         for col in range(0, img_width, width):
             if col + width > img_width or row + height > img_height:
                 continue
             yield image.crop((col, row, col + width, row + height))
+            # yield image.resize((col, row, col + width, row + height))
 
 def process_image(image, size):
-    colored_images   = []
-    combined_images  = []
+    color_images     = []
     grayscale_images = []
+    combined_images  = []
 
-    for index, colored in enumerate(create_patches(image, size)):
-        colored_images.append(colored)
-        grayscale = colored.convert('LA')
-        grayscale_images.append(grayscale)
+    # Convert Numpy array to Pillow image.
+    # image = PIL.Image.fromarray((image * 225).astype(numpy.uint8))
+    image = PIL.Image.fromarray(numpy.uint8(image * 255), 'RGB')
+    for index, color in enumerate(create_patches(image, size)):
+        grayscale = color.convert('LA')
 
-        w, h     = colored.size
+        w, h     = color.size
         combined = PIL.Image.new("RGB", (w*2, h))
-        combined.paste(colored,   (0, 0, 1*w, h))
+        combined.paste(color,     (0, 0, 1*w, h))
         combined.paste(grayscale, (w, 0, 2*w, h))
-        combined_images.append(combined)
 
-    return colored_images, grayscale_images, combined_images
+        # Convert Pillow image to Numpy array.
+        color_images.append(numpy.array(color))
+        grayscale_images.append(numpy.array(grayscale))
+        combined_images.append(numpy.array(combined))
+
+    return color_images, grayscale_images, combined_images
 
 def split_dataset(datasets, dataset_length, split):
     def gen_dataset(dataset, maximum):

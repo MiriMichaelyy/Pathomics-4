@@ -1,4 +1,5 @@
 import os
+import PIL
 import numpy
 import inputs
 import matplotlib
@@ -9,7 +10,9 @@ def save_dataset(path, dataset, offset=0, suffix="png"):
     count = 0
     for image in dataset:
         count += 1
+        image = PIL.Image.fromarray((image * 255).astype(numpy.uint8))
         image.save(os.path.join(path, f"{offset + count}.{suffix}"))
+        # plt.imsave(os.path.join(path, f"{offset + count}.{suffix}"), image)
     return count
 
 def save_losses(path, losses, epoch):

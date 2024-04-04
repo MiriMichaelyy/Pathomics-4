@@ -83,10 +83,11 @@ if not args.preprocessed:
     # Generate basic processed dataset.
     size = 0
     print(f"Splitting original images into {args.width}x{args.height} (color, grayscale & combined).")
-    for image in inputs.load_dataset(args.dataset, suffix=args.input_format):
+    for i, image in enumerate(inputs.load_dataset(args.dataset, suffix=args.input_format)):
         color, grayscale, combined = preprocess.process_image(image, shape)
-        size += outputs.save_dataset(os.path.join(processed_path, "color"),     color,     offset=size, suffix=args.output_format)
-        size += outputs.save_dataset(os.path.join(processed_path, "grayscale"), grayscale, offset=size, suffix=args.output_format)
+        print(f"Image #{i} | size: {size}")
+        outputs.save_dataset(os.path.join(processed_path, "color"),     color,     offset=size, suffix=args.output_format)
+        outputs.save_dataset(os.path.join(processed_path, "grayscale"), grayscale, offset=size, suffix=args.output_format)
         size += outputs.save_dataset(os.path.join(processed_path, "combined"),  combined,  offset=size, suffix=args.output_format)
 
     # Load dataset generators.
@@ -116,6 +117,7 @@ if not args.preprocessed:
 ##############################
 # MAIN LOGIC                 #
 ##############################
+exit()
 # Train & test the GAN model.
 print("Starting to train models.")
 color      = inputs.load_dataset(os.path.join(processed_path, "train", "color"),     suffix=args.output_format)
