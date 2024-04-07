@@ -22,8 +22,10 @@ def train(models, batch):
     start_time = datetime.datetime.now()
     for i, (X_realB, X_realA) in enumerate(batch):
 
-        # Generate a batch of fake samples.
+        # Generate a batch of fake samples.i
         X_fakeB = g_model.predict(X_realA)
+        exit()
+
         y_fake  = numpy.zeros((len(X_fakeB), n_patch, n_patch, 1))
 
         # Update models for real samples.

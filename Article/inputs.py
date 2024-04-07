@@ -4,9 +4,11 @@ import glob
 import keras
 import numpy
 import imageio
+import matplotlib.pyplot as plt
+from skimage.transform import resize
 
-def get_size(path):
-    return len(os.listdir(path))
+def get_size(path, suffix="png"):
+    return len(list(filter(lambda item: item.endswith(suffix), os.listdir(path))))
 
 def load_images(path, suffix="png"):
     if not os.path.exists(path):
@@ -33,13 +35,28 @@ def load_dataset(path, suffix="png"):
     for full_path in dataset:
         yield imageio.imread(full_path).astype(numpy.uint8)
 
-def load_batch(datasets, size):
-    for i, (color, grayscale) in enumerate(datasets):
-        if i >= size:
-            return
-        color     = color.astype(float)     / 127.5 - 1.
-        grayscale = grayscale.astype(float) / 127.5 - 1.
-        yield color, grayscale
+def load_batch(path, size, suffix="png"):
+    paths = glob.glob(path + os.path.sep + "*." + suffix)
+    n_batches = int(len(paths) / size)
+    for i in range(n_batches):
+        batch = paths[i * size:(i + 1) * size]
+        imgs_A, imgs_B = [], []
+        for img in batch:
+            img = imageio.imread(img).astype(float)
+            h, w, _ = img.shape
+            half_w = int(w / 2)
+            img_A = img[:, :half_w, :]
+            img_B = img[:, half_w:, :]
+            img_A = resize(img_A, (256,256), mode='reflect', anti_aliasing=True)
+            img_B = resize(img_B, (256,256), mode='reflect', anti_aliasing=True)
+            if numpy.random.random() > 0.5:
+                img_A = numpy.fliplr(img_A)
+                img_B = numpy.fliplr(img_B)
+            imgs_A.append(img_A)
+            imgs_B.append(img_B)
+        imgs_A = numpy.array(imgs_A) / 127.5 - 1.
+        imgs_B = numpy.array(imgs_B) / 127.5 - 1.
+        yield imgs_A, imgs_B
 
 def get_best_model(path):
     loss_arr = []

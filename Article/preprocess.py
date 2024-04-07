@@ -12,11 +12,10 @@ def create_patches(image, size):
             yield image.crop((col, row, col + width, row + height))
 
 def valid_image(image, white_pixel=192, black_pixel=64, valid_thershold=0.8):
+    pixels = numpy.array(image, dtype=numpy.uint8)
     whites = 0
     blacks = 0
-    pixels = numpy.array(image, dtype=numpy.uint8)
 
-    threshold = pixels.shape[0] * pixels.shape[1] * valid_thershold
     for row in range(pixels.shape[0]):
         for col in range(pixels.shape[1]):
             # Check if the pixel is a black pixel.
@@ -27,18 +26,20 @@ def valid_image(image, white_pixel=192, black_pixel=64, valid_thershold=0.8):
                 whites += 1
 
     # Check if the image is mostly black or white.
+    threshold = pixels.shape[0] * pixels.shape[1] * valid_thershold
     if whites > threshold or blacks > threshold:
         return False
     return True
 
-def process_image(image, size):
+def process_image(image, size, no_filter=False):
     color_images     = []
     grayscale_images = []
     combined_images  = []
 
     # Convert Numpy array to Pillow image.
     for index, color in enumerate(create_patches(image, size)):
-        if not valid_image(color):
+        if not no_filter and not valid_image(color):
+            print(f"Patch #{index} is invalid")
             continue
 
         # Create grayscale image.

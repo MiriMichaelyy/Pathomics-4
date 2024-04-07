@@ -47,13 +47,7 @@ dataset = inputs.load_dataset(args.dataset, args.input_format)
 print("Starting")
 normalized = []
 for i, image in enumerate(dataset):
-    print(i)
-    print(type(image))
-    print(image.size)
-    exit()
     parsed_image = numpy.array(image, dtype=float)
-    print(type(parsed_image))
-    print(image.size, flush=True)
     normalized.append(logic.normalize(model, parsed_image))
 print("Normalized")
 outputs.save_dataset(args.results, normalized, args.output_format)

@@ -23,6 +23,7 @@ parser.add_argument("--epochs",        action="store",      default=15,    type=
 parser.add_argument("--preprocessed",  action="store_true", default=False,                                 help="Preprocess the dataset into color, grayscale & combined and then split into train, test and validation.")
 parser.add_argument("--input_format",  action="store",      default="scn", choices=["scn", "png", "tiff"], help="Input images format.")
 parser.add_argument("--output_format", action="store",      default="png", choices=["scn", "png", "tiff"], help="Output format to save.")
+parser.add_argument("--no_filter",     action="store_true", default=False,                                 help="Preprocess all images without the filter function.")
 args = parser.parse_args()
 
 ##############################
@@ -83,7 +84,8 @@ if not args.preprocessed:
     print(f"Splitting original images into {args.width}x{args.height} (color, grayscale & combined).")
     size = 0
     for i, image in enumerate(inputs.load_images(args.dataset, suffix=args.input_format)):
-        color, grayscale, combined = preprocess.process_image(image, shape)
+        print(f"Image #{i}: {image.filename}")
+        color, grayscale, combined = preprocess.process_image(image, shape, args.no_filter)
         outputs.save_dataset(os.path.join(processed_path,         "color"),     color,     offset=size, suffix=args.output_format, has_color=True)
         outputs.save_dataset(os.path.join(processed_path,         "grayscale"), grayscale, offset=size, suffix=args.output_format, has_color=False)
         size += outputs.save_dataset(os.path.join(processed_path, "combined"),  combined,  offset=size, suffix=args.output_format, has_color=True)
@@ -117,11 +119,10 @@ if not args.preprocessed:
 ##############################
 # Train & test the GAN model.
 print("Starting to train models.")
-color      = inputs.load_dataset(os.path.join(processed_path, "train", "color"),     suffix=args.output_format)
-grayscale  = inputs.load_dataset(os.path.join(processed_path, "train", "grayscale"), suffix=args.output_format)
-size       = inputs.get_size(os.path.join(processed_path, "train", "color"))
-size      += inputs.get_size(os.path.join(processed_path, "test",  "color"))
-size      += inputs.get_size(os.path.join(processed_path, "val",   "color"))
+# combined = inputs.load_dataset(os.path.join(processed_path, "train", "combined"), suffix=args.output_format)
+size     = inputs.get_size(os.path.join(processed_path, "train", "color"), suffix=args.output_format)
+size    += inputs.get_size(os.path.join(processed_path, "test",  "color"), suffix=args.output_format)
+size    += inputs.get_size(os.path.join(processed_path, "val",   "color"), suffix=args.output_format)
 
 models = Models.define_models(shape)
 for epoch in range(args.epochs):
@@ -129,20 +130,20 @@ for epoch in range(args.epochs):
     # Split the dataset into equal batches.
     # Convert the image into numpy arrays.
     batch_size = size // args.epochs
-    batch      = inputs.load_batch(zip(color, grayscale), batch_size)
+    batch      = inputs.load_batch(os.path.join(processed_path, "train", "combined"), batch_size, suffix=args.output_format)
 
     # Train the model and calculate losses.
     print(f"Epoch #{epoch+1} | Batch: {epoch * batch_size} - {(epoch + 1) * batch_size}")
     models, losses = logic.train(models, batch)
 
     # Save the losses and models in the results directory.
-    outputs.save_losses(losses, results_path, epoch + 1)
-    outputs.save_models(models, results_path, epoch + 1)
+    outputs.save_losses(results_path, losses, epoch + 1)
+    outputs.save_models(results_path, models, epoch + 1)
 
 print("Starting best model test.")
-test  = inputs.load_dataset(os.path.join(results_path, "test"), suffix=args.output_format)
-model = inputs.get_best_model(results_path)
-logic.test(results_path, model, test)
+# test  = inputs.load_dataset(os.path.join(results_path, "test"), suffix=args.output_format)
+# model = inputs.get_best_model(results_path)
+# logic.test(results_path, model, test)
 
 # Outputs of the models.
-outputs.plot_outputs(*losses)
+# outputs.plot_outputs(*losses)
