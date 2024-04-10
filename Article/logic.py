@@ -24,11 +24,11 @@ def train(models, batch):
 
         # Generate a batch of fake samples.i
         X_fakeB = g_model.predict(X_realA)
-        exit()
-
         y_fake  = numpy.zeros((len(X_fakeB), n_patch, n_patch, 1))
 
         # Update models for real samples.
+        print([X_realA.shape, X_realB.shape])
+        print(y_real.shape)
         d_loss1 = d_model.train_on_batch([X_realA, X_realB], y_real)
         d_loss2 = d_model.train_on_batch([X_realA, X_fakeB], y_fake)
 

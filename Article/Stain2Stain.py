@@ -83,8 +83,8 @@ if not args.preprocessed:
     # Generate basic processed dataset.
     print(f"Splitting original images into {args.width}x{args.height} (color, grayscale & combined).")
     size = 0
-    for i, image in enumerate(inputs.load_images(args.dataset, suffix=args.input_format)):
-        print(f"Image #{i}: {image.filename}")
+    for i, image in enumerate(inputs.load_dataset(args.dataset, suffix=args.input_format)):
+        print(f"Image #{i}: {image.shape} | type: {image.dtype}")
         color, grayscale, combined = preprocess.process_image(image, shape, args.no_filter)
         outputs.save_dataset(os.path.join(processed_path,         "color"),     color,     offset=size, suffix=args.output_format, has_color=True)
         outputs.save_dataset(os.path.join(processed_path,         "grayscale"), grayscale, offset=size, suffix=args.output_format, has_color=False)
@@ -119,18 +119,15 @@ if not args.preprocessed:
 ##############################
 # Train & test the GAN model.
 print("Starting to train models.")
-# combined = inputs.load_dataset(os.path.join(processed_path, "train", "combined"), suffix=args.output_format)
-size     = inputs.get_size(os.path.join(processed_path, "train", "color"), suffix=args.output_format)
-size    += inputs.get_size(os.path.join(processed_path, "test",  "color"), suffix=args.output_format)
-size    += inputs.get_size(os.path.join(processed_path, "val",   "color"), suffix=args.output_format)
-
+training_path = os.path.join(processed_path, "train", "combined")
+size   = inputs.get_size(training_path, suffix=args.output_format)
 models = Models.define_models(shape)
 for epoch in range(args.epochs):
 
     # Split the dataset into equal batches.
     # Convert the image into numpy arrays.
     batch_size = size // args.epochs
-    batch      = inputs.load_batch(os.path.join(processed_path, "train", "combined"), batch_size, suffix=args.output_format)
+    batch      = inputs.load_batch(training_path, batch_size, suffix=args.output_format)
 
     # Train the model and calculate losses.
     print(f"Epoch #{epoch+1} | Batch: {epoch * batch_size} - {(epoch + 1) * batch_size}")
@@ -147,3 +144,4 @@ print("Starting best model test.")
 
 # Outputs of the models.
 # outputs.plot_outputs(*losses)
+print("Done.")

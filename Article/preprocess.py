@@ -3,13 +3,14 @@ import math
 import numpy
 
 def create_patches(image, size):
-    img_width, img_height = image.size
-    width, height, _      = size
+    img_width, img_height, _ = image.shape
+    width, height, _         = size
     for row in range(0, img_height, height):
         for col in range(0, img_width, width):
             if col + width > img_width or row + height > img_height:
                 continue
-            yield image.crop((col, row, col + width, row + height))
+            yield image[row : row + height, col : col + width, :]
+            # yield image.crop((col, row, col + width, row + height))
 
 def valid_image(image, white_pixel=192, black_pixel=64, valid_thershold=0.8):
     pixels = numpy.array(image, dtype=numpy.uint8)
@@ -43,18 +44,24 @@ def process_image(image, size, no_filter=False):
             continue
 
         # Create grayscale image.
-        grayscale = color.convert('LA')
+        PILImage  = PIL.Image.fromarray(color)
+        PILgrey   = PILImage.convert('LA')
+        grayscale = numpy.pad(numpy.array(PILgrey), ((0,0),(0,0),(0,1)), mode='constant', constant_values=0)
 
         # Create combined image.
-        w, h     = color.size
-        combined = PIL.Image.new("RGB", (w*2, h))
-        combined.paste(color,     (0, 0, 1*w, h))
-        combined.paste(grayscale, (w, 0, 2*w, h))
+        combined = numpy.hstack((color, grayscale))
+        # w, h     = *size
+        # combined = PIL.Image.new("RGB", (w*2, h))
+        # combined.paste(color,     (0, 0, 1*w, h))
+        # combined.paste(grayscale, (w, 0, 2*w, h))
 
         # Convert Pillow image to Numpy array.
-        color_images.append(numpy.array(color,         dtype=float) / 255)
-        grayscale_images.append(numpy.array(grayscale, dtype=float) / 255)
-        combined_images.append(numpy.array(combined,   dtype=float) / 255)
+        color_images.append(color)
+        grayscale_images.append(grayscale)
+        combined_images.append(combined)
+        # color_images.append(numpy.array(color,         dtype=float) / 255)
+        # grayscale_images.append(numpy.array(grayscale, dtype=float) / 255)
+        # combined_images.append(numpy.array(combined,   dtype=float) / 255)
 
     return color_images, grayscale_images, combined_images
 

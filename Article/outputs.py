@@ -1,19 +1,17 @@
 import os
-import PIL
 import numpy
 import matplotlib
 import matplotlib.pyplot as plt
+import PIL
 
 def save_dataset(path, dataset, offset=0, suffix="png", has_color=True):
     os.makedirs(path, exist_ok=True)
     count = 0
     for image in dataset:
         count += 1
-        if has_color:
-            plt.imsave(os.path.join(path, f"{offset + count}.{suffix}"), image)
-        else:
-            image = PIL.Image.fromarray((image * 255).astype(numpy.uint8))
-            image.save(os.path.join(path, f"{offset + count}.{suffix}"))
+        image = PIL.Image.fromarray((image * 255).astype(numpy.uint8))
+        image.save(os.path.join(path, f"{offset + count}.{suffix}"))
+        # plt.imsave(os.path.join(path, f"{offset + count}.{suffix}"), image)
     return count
 
 def save_losses(path, losses, epoch):
