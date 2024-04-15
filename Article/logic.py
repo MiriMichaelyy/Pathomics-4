@@ -1,10 +1,5 @@
-import os
 import numpy
-import imageio
 import datetime
-
-def normalize(model, image):
-    return model.predict(image)
 
 def train(models, batch):
     d_model, g_model, gan_model = models
@@ -22,13 +17,11 @@ def train(models, batch):
     start_time = datetime.datetime.now()
     for i, (X_realB, X_realA) in enumerate(batch):
 
-        # Generate a batch of fake samples.i
+        # Generate a batch of fake samples.
         X_fakeB = g_model.predict(X_realA)
         y_fake  = numpy.zeros((len(X_fakeB), n_patch, n_patch, 1))
 
         # Update models for real samples.
-        print([X_realA.shape, X_realB.shape])
-        print(y_real.shape)
         d_loss1 = d_model.train_on_batch([X_realA, X_realB], y_real)
         d_loss2 = d_model.train_on_batch([X_realA, X_fakeB], y_fake)
 
@@ -40,17 +33,11 @@ def train(models, batch):
         Disc_loss_fake.append(d_loss2)
         Gen_loss.append(g_loss)
 
-    elapsed_time = datetime.datetime.now() - start_time
+    elapsed_time   = datetime.datetime.now() - start_time
     Disc_loss_real = numpy.array(Disc_loss_real)
     Disc_loss_fake = numpy.array(Disc_loss_fake)
     Gen_loss       = numpy.array(Gen_loss)
-    return (g_model, d_model, gan_model), (Disc_loss_real, Disc_loss_fake, Gen_loss)
+    return (d_model, g_model, gan_model), (Disc_loss_real, Disc_loss_fake, Gen_loss)
 
-def test(results_path, model, dataset):
-    results_path = os.path.join(results_path, "test", "generated", "%d.tiff")
-    start_time = datetime.datetime.now()
-    for index, (color, grayscale) in enumerate(dataset):
-        print(f"Testing image #{index+1}")
-        generated = numpy.squeeze(numpy.array(model.predict(grayscale)))
-        imageio.imwrite(results_path % (index + 1), generated)
-    print('time: ', datetime.datetime.now() - start_time)
+def normalize(model, image):
+    return model.predict(image)
