@@ -30,7 +30,7 @@ def load_batch(path, size, suffix="png"):
     # paths = glob.glob(path + os.path.sep + "*." + suffix)
     paths = [os.path.join(path, file) for file in os.listdir(path) if file.endswith(suffix)]
     paths = list(filter(os.path.isfile, paths))
-    batch = numpy.random.choice(paths, size)
+    batch = numpy.random.choice(paths, size, False)
     for image in batch:
         color_arr     = []
         grayscale_arr = []

@@ -141,8 +141,12 @@ if not args.preprocessed:
 # MAIN LOGIC                 #
 ##############################
 training_path = os.path.join(processed_path, "train", "combined")
-models        = Models.define_models(shape)
 batch_size    = min(args.batch_size, inputs.get_size(training_path, suffix=args.output_format))
+models        = Models.define_models(shape)
+
+# Optimization - not enough images for multiple epochs.
+if batch_size < args.batch_size:
+    args.epochs = 1
 
 # Train & test the GAN model.
 print("Starting to train models.")
