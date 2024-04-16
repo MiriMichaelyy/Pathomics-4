@@ -36,18 +36,17 @@ if not os.path.exists(args.dataset):
     exit()
 
 if "results" not in args:
-    args.results = os.path.join(args.dataset, "normalized")
+    args.results = os.path.join(args.dataset, "Results", "normalized")
 
 ##############################
 # MAIN LOGIC                 #
 ##############################
-# model   = inputs.get_best_model(args.model)
-model = load_model(args.model)
+model   = load_model(args.model)
 dataset = inputs.load_dataset(args.dataset, args.input_format)
 print("Starting")
-normalized = []
-for i, image in enumerate(dataset):
-    parsed_image = numpy.array(image, dtype=float)
-    normalized.append(logic.normalize(model, parsed_image))
-print("Normalized")
-outputs.save_dataset(args.results, normalized, args.output_format)
+for index, grayscale in enumerate(dataset):
+    grayscale = inputs.convert(grayscale)
+    generated = logic.normalize(model, grayscale)
+    generated = outputs.convert(generated)
+    outputs.save_image(args.results, generated, offset=index + 1, suffix=args.output_format)
+print("Done.")

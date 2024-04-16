@@ -13,19 +13,27 @@ import preprocess
 # ARGUMENTS & PARAMETERS     #
 ##############################
 parser = argparse.ArgumentParser(description="Normalize a dataset of images.")
-parser.add_argument("--dataset",       action="store",       required=True, type=str,                        help="Path to the original dataset.")
-parser.add_argument("--channels",      action="store",       default=3,     type=int,                        help="Number of channels in the images.")
-parser.add_argument("--image_width",   action="store",       default=256,   type=int,   dest="width",        help="Width of the final images.")
-parser.add_argument("--image_height",  action="store",       default=256,   type=int,   dest="height",       help="Height of the final images.")
-parser.add_argument("--train",         action="store",       default=0.5,   type=float,                      help="Percentage of the images that go into training.")
-parser.add_argument("--test",          action="store",       default=0.5,   type=float,                      help="Percentage of the images that go into testing.")
-parser.add_argument("--val",           action="store",       default=0,     type=float, dest="validation",   help="Percentage of the images that go into validation.")
-parser.add_argument("--epochs",        action="store",       default=15,    type=int,                        help="Number of epochs, in each train the model with a random batch of images.")
-parser.add_argument("--preprocessed",  action="store_true",  default=False,                                  help="Preprocess the dataset into color, grayscale & combined and then split into train, test and validation.")
-parser.add_argument("--input_format",  action="store",       default="tiff", choices=["scn", "png", "tiff"], help="Input images format.")
-parser.add_argument("--output_format", action="store",       default="tiff", choices=["scn", "png", "tiff"], help="Output format to save.")
-parser.add_argument("--use_filter",    action="store_true",  default=False,                                  help="Preprocess all images without the filter function.")
-parser.add_argument("--clear",         action="store_true",  default=False,             dest="clear",        help="Clear all preprocessed files.")
+
+# Preprocess arguments.
+parser.add_argument("--dataset",       action="store",      required=True,  type=str,                       help="Path to the original dataset.")
+parser.add_argument("--input_format",  action="store",      default="tiff", choices=["scn", "png", "tiff"], help="Input images format.")
+parser.add_argument("--output_format", action="store",      default="tiff", choices=["scn", "png", "tiff"], help="Output format to save.")
+parser.add_argument("--clear",         action="store_true", default=False,  dest="clear",                   help="Clear all preprocessed files.")
+parser.add_argument("--use_filter",    action="store_true", default=False,                                  help="Preprocess all images without the filter function.")
+parser.add_argument("--preprocessed",  action="store_true", default=False,                                  help="Preprocess the dataset into color, grayscale & combined and then split into train, test and validation.")
+
+# Image arguments.
+parser.add_argument("--image_width",  action="store", default=256, type=int, dest="width",  help="Width of the final images.")
+parser.add_argument("--image_height", action="store", default=256, type=int, dest="height", help="Height of the final images.")
+parser.add_argument("--channels",     action="store", default=3,   type=int,                help="Number of channels in the images.")
+
+# Training arguments.
+parser.add_argument("--epochs",     action="store", default=15,   type=int,                      help="Number of epochs, in each train the model with a random batch of images.")
+parser.add_argument("--train",      action="store", default=0.5,  type=float,                    help="Percentage of the images that go into training.")
+parser.add_argument("--test",       action="store", default=0.5,  type=float,                    help="Percentage of the images that go into testing.")
+parser.add_argument("--val",        action="store", default=0,    type=float, dest="validation", help="Percentage of the images that go into validation.")
+parser.add_argument("--batch_size", action="store", default=3000, type=int,   dest="batch_size", help="Minimum batch size for an epoch.")
+
 args = parser.parse_args()
 
 # Create directories.
@@ -51,15 +59,19 @@ if total_weight != 1:
     args.validation /= total_weight
 
 if args.width <= 0 or args.height <= 0:
-    print("Image dimensions are non-positive.")
+    print(f"Image dimensions are non-positive: {args.width}x{args.height}")
     exit()
 
 if args.channels <= 0:
-    print("Invalid number of channels.")
+    print(f"Invalid number of channels: {args.channels}")
     exit()
 
 if args.epochs <= 0:
-    print("Invalid number of epochs.")
+    print(f"Invalid number of epochs: {args.epochs}")
+    exit()
+
+if args.batch_size <= 0:
+    print(f"Invalid batch size: {args.batch_size}")
     exit()
 
 if args.clear:
@@ -130,7 +142,7 @@ if not args.preprocessed:
 ##############################
 training_path = os.path.join(processed_path, "train", "combined")
 models        = Models.define_models(shape)
-batch_size    = inputs.get_size(training_path, suffix=args.output_format) # // args.epochs
+batch_size    = min(args.batch_size, inputs.get_size(training_path, suffix=args.output_format))
 
 # Train & test the GAN model.
 print("Starting to train models.")
@@ -154,7 +166,7 @@ for index, grayscale in enumerate(dataset):
     grayscale = inputs.convert(grayscale)
     generated = logic.normalize(model, grayscale)
     generated = outputs.convert(generated)
-    outputs.save_image(os.path.join(results_path, "generated"), generated, index + 1, suffix=args.output_format)
+    outputs.save_image(os.path.join(results_path, "generated"), generated, offset=index + 1, suffix=args.output_format)
 
 # Outputs of the models.
 outputs.plot_outputs(results_path, epoch, batch_size)

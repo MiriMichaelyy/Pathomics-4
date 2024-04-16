@@ -1,4 +1,5 @@
 import os
+import PIL
 import numpy
 import imageio
 import matplotlib
@@ -9,6 +10,7 @@ def convert(image):
 
 def save_image(path, image, offset, suffix="png"):
     os.makedirs(path, exist_ok=True)
+    image = ((image + 1.) * 127.5).astype(numpy.uint8)
     imageio.imwrite(os.path.join(path, f"{offset}.{suffix}"), image)
 
 def save_dataset(path, dataset, offset=0, suffix="png"):
