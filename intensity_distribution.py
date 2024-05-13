@@ -1,46 +1,40 @@
-import tifffile
-import matplotlib.pyplot as plt
-from skimage import exposure
+#!/bin/python3
+import pathlib
+import argparse
 
-# Load TIFF image
-def load_tiff_image(img_path):
-    return tifffile.imread(img_path)
+import imageio
+import skimage
+import matplotlib.pyplot as plt
+
+##############################
+# ARGUMENTS & PARAMETERS     #
+##############################
+parser = argparse.ArgumentParser(description="Display the intensity distribution of images.")
+parser.add_argument("--images", required=True, nargs='+', default=[], help="List of images to analyze.")
+args = parser.parse_args()
 
 # Plot intensity distribution and CDF on the same graph
 def plot_intensity_distribution(image, ax, c_color, title):
-    img_hist, bins = exposure.histogram(image, source_range='dtype')
+    img_hist, bins = skimage.exposure.histogram(image, source_range='dtype')
     ax.plot(bins, img_hist / img_hist.max(), label='Intensity Histogram')
-    img_cdf, bins = exposure.cumulative_distribution(image)
+    img_cdf, bins = skimage.exposure.cumulative_distribution(image)
     ax.plot(bins, img_cdf, label='Cumulative Distribution Function')
     ax.set_ylabel(c_color)
     ax.legend()
     ax.set_title(title)
 
-# Plot intensity distribution and CDF for source, reference, and normalized images
-def plot_intensity_distribution_comparison(source_image, reference_image, normalized_image):
-    fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(15, 15))
+names  = []
+images = []
+for path in args.images:
+    images.append(imageio.imread(path))
+    names.append(pathlib.Path(path).stem.title())
 
-    for i, (image, title) in enumerate(zip([source_image, reference_image, normalized_image], ['Source', 'Reference', 'Normalized'])):
-        for c, c_color in enumerate(('red', 'green', 'blue')):
-            plot_intensity_distribution(image[..., c], axes[c, i], c_color, title)
+# Plot intensity distribution and CDF for source, and normalized images
+fig, axes = plt.subplots(nrows=3, ncols=len(images), figsize=(10, 10))
 
-    # Remove empty plots
-    for i in range(2, 3):
-        for j in range(1, 3):
-            axes[i, j].axis('off')
+for i, (image, title) in enumerate(zip(images, names)):
+    for c, c_color in enumerate(('red', 'green', 'blue')):
+        plot_intensity_distribution(image[..., c], axes[c, i], c_color, title)
 
-    plt.tight_layout()
-    plt.show()
-
-# Paths to source, reference, and normalized images
-source_img_path = r'C:\Users\mirim\PycharmProjects\STST_replication\New_data\results\Original\1.tiff'
-reference_img_path = r'C:\Users\mirim\PycharmProjects\STST_replication\H\20.tiff'
-normalized_img_path = r'C:\Users\mirim\PycharmProjects\STST_replication\New_data\results\Generated\1.tiff'
-
-# Load the source, reference, and normalized images
-source_image = load_tiff_image(source_img_path)
-reference_image = load_tiff_image(reference_img_path)
-normalized_image = load_tiff_image(normalized_img_path)
-
-# Plot intensity distribution and CDF for source, reference, and normalized images
-plot_intensity_distribution_comparison(source_image, reference_image, normalized_image)
+plt.tight_layout()
+plt.show()

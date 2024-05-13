@@ -29,8 +29,8 @@ parser.add_argument("--channels",     action="store", default=3,   type=int,    
 
 # Training arguments.
 parser.add_argument("--epochs",     action="store", default=15,   type=int,                      help="Number of epochs, in each train the model with a random batch of images.")
-parser.add_argument("--train",      action="store", default=0.5,  type=float,                    help="Percentage of the images that go into training.")
-parser.add_argument("--test",       action="store", default=0.5,  type=float,                    help="Percentage of the images that go into testing.")
+parser.add_argument("--train",      action="store", default=0.3,  type=float,                    help="Percentage of the images that go into training.")
+parser.add_argument("--test",       action="store", default=0.7,  type=float,                    help="Percentage of the images that go into testing.")
 parser.add_argument("--val",        action="store", default=0,    type=float, dest="validation", help="Percentage of the images that go into validation.")
 parser.add_argument("--batch_size", action="store", default=3000, type=int,   dest="batch_size", help="Minimum batch size for an epoch.")
 
@@ -150,18 +150,17 @@ if batch_size < args.batch_size:
 
 # Train & test the GAN model.
 print("Starting to train models.")
-for epoch in range(args.epochs):
+for epoch in range(1, args.epochs + 1):
     # Split the dataset into equal random batches.
     # Convert the image into numpy arrays.
     batch = inputs.load_batch(training_path, batch_size, suffix=args.output_format)
 
     # Train the model and calculate losses.
-    print(f"Epoch #{epoch + 1} | Batch size: {batch_size}")
-    models, losses = logic.train(models, batch)
+    print(f"Epoch #{epoch} | Batch size: {batch_size}")
+    models, losses = logic.train(results_path, models, batch, epoch)
 
-    # Save the losses and models in the results directory.
-    outputs.save_losses(results_path, losses, epoch + 1)
-    outputs.save_models(results_path, models, epoch + 1)
+    # Save the losses in the results directory.
+    outputs.save_losses(results_path, losses, epoch)
 
 print("Starting best model test.")
 model, epoch = inputs.get_best_model(results_path)

@@ -59,7 +59,7 @@ def get_best_model(path):
         epoch = int(array.split('E')[1].split('_')[0])
         loss  = numpy.load(array)
 
-        if numpy.sum(loss) < numpy.sum(min_loss):
+        if numpy.min(loss) < numpy.min(min_loss):
             min_epoch = epoch
             min_loss  = loss
 

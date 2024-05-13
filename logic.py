@@ -1,7 +1,8 @@
 import numpy
 import datetime
+import outputs
 
-def train(models, batch):
+def train(path, models, batch, epoch):
     d_model, g_model, gan_model = models
     Disc_loss_real = []
     Disc_loss_fake = []
@@ -32,6 +33,10 @@ def train(models, batch):
         Disc_loss_real.append(d_loss1)
         Disc_loss_fake.append(d_loss2)
         Gen_loss.append(g_loss)
+
+        # Save the models over the minimum loss generator.
+        if g_loss <= min(Gen_loss):
+            outputs.save_models(path, models, epoch)
 
     elapsed_time   = datetime.datetime.now() - start_time
     Disc_loss_real = numpy.array(Disc_loss_real)
