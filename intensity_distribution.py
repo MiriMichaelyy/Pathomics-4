@@ -40,7 +40,5 @@ for i, (image, title) in enumerate(zip(images, names)):
 # https://stackoverflow.com/questions/52798540/working-with-ssim-loss-function-in-tensorflow-for-rgb-images
 # https://www.google.com/search?sca_esv=54234023db33c7ee&sca_upv=1&sxsrf=ADLYWILPKY1bmghifHufMJKghw3HiSFLmA:1715705712115&q=how+to+evaluate+SSIM+for+RGB&spell=1&sa=X&ved=2ahUKEwjvvYnszY2GAxWHwQIHHRt7D0IQBSgAegQICxAB&biw=1680&bih=897&dpr=1
 # https://dsp.stackexchange.com/questions/75187/how-to-apply-the-ssim-measure-on-rgb-images
-#
-
 plt.tight_layout()
 plt.show()

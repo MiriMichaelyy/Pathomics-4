@@ -14,7 +14,6 @@ from tkinter.constants import *
 
 # Local modules.
 import gui
-import gui_functions
 
 ##############################
 # CONSTANTS                  #
